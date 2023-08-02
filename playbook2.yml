@@ -1,0 +1,60 @@
+---
+
+- hosts: redhat
+  become: yes
+  remote_user: sysadmin
+
+  tasks:
+
+  - name: Install apache
+    yum:
+     name: httpd
+     state: present
+
+  - name: Create virtualhost configuration directory
+    file:
+      path: /etc/httpd/vhosts.d
+      state: directory
+      owner: root
+
+  - name: Copy virtualhost configuration
+    copy:
+      src: ./files/virtualhost.conf
+      dest: /etc/httpd/vhost.d/ejemplo.conf
+    notify: Restart apache
+
+  - name: Include vhosts directory
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      line: IncludeOptional /etc/httpd/vhosts.d/*.conf
+
+  - name: Open firewall ports
+    firewalld:
+       service: "{{ item }}"
+       state: enabled
+       permament: true
+       immediate: true
+    loop:
+    - http
+    - https  
+
+  - name: Start and enable httpd service
+    service:
+      name: httpd
+      enabled: true
+      state: started
+
+  - name: Copy index file
+    copy:
+      src: ./files/index.html
+      dest: /var/www/ejemplo/html/index.html
+      owner: apache
+      group: apache
+      mode: 0644
+
+  handlers:
+
+  - name: Restart apache
+    service: 
+      name: httpd
+      state: restarted

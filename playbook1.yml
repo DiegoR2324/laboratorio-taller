@@ -1,0 +1,75 @@
+---
+- hosts: redhat
+  become: yes
+  remote_user: sysadmin
+
+  tasks:
+
+  - name: Update all available packages for RedHat servers
+    yum:
+      name: "*"
+      state: latest
+    notify: Restart server
+    when: ansible_os_family == "RedHat"
+
+  - name: Update all available packages for Debian servers
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+    notify: Restart server
+    when: ansible_os_family == "Debian"
+
+  - name: Apache
+    yum:
+      name: "httpd"
+      state: latest
+    notify: Restart server
+    when: ansible_os_family == "RedHat"
+
+  - name: Copiar ejemplo.conf
+    copy:
+      src: /home/sysadmin/laboratorio-taller/ejemplo.conf
+      dest: /var/www/ejemplo/html
+      owner: sysadmin
+      group: sysadmin
+      mode: '0644'
+
+  - name: Copiar index.html
+    copy:
+      src: /home/sysadmin/laboratorio-taller/index.html
+      dest: /var/www/ejemplo/html
+      owner: sysadmin
+      group: sysadmin
+      mode: '0644'
+
+  - name: Iniciar httpd   
+    service:
+      name: "httpd"
+      state: started
+      enabled: true
+
+  - name: firewalld   
+    yum:
+      name: "firewalld"
+      state: latest
+      notify: Restart server
+
+  - name: iniciar firewalld   
+    service:
+      name: "firewalld"
+      state: started
+      enabled: true
+ 
+  - name: puertos
+    firewalld:
+      service: httpd
+      permanent: yes
+      state: enabled
+
+
+  handlers:
+
+  - name: Restart server
+    reboot:      
+   
