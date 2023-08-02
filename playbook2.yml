@@ -45,8 +45,8 @@
       state: started
 
   - name: Copy index file
-    copy:
-      src: ./files/index.html
+    template:
+      src: ./files/index.j2
       dest: /var/www/ejemplo/html/index.html
       owner: apache
       group: apache
