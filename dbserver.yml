@@ -9,9 +9,19 @@
 
   - name: Mariadb server install
     apt:
-      name: mariadb-server
+      name: "{{ item }}"
       state: present
       update_cache: yes
+    loop:
+      - mariadb-server
+      - mariadb-client
+      - python3.11-pip
+
+  - name: Install PyMySQL with pip
+    pip:
+      name: PyMySQL
+      executable: pip3.11
+      extra_args: --user
 
   - name: Mariadb service enable and start
     service:
@@ -22,7 +32,7 @@
   - name: Configure mariadb to listen on all interfaces
     lineinfile:
       path: /etc/mysql/mariadb.conf.d/50-server.cnf
-      regexp: 'bind_address'
+      regexp: '^bind_address'
       line: bind_address = 0.0.0.0/0
 
   - name: Open mariadb ports
